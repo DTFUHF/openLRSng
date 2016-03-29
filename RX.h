@@ -695,6 +695,22 @@ void setup()
   if (slaveState) {
     reinitSlave();
   }
+  
+#ifdef TX_INV_pin
+  pinMode(TX_INV_pin, OUTPUT);
+  if (rx_config.pinMapping[TXD_OUTPUT] == PINMAP_SBUS)
+    digitalWrite(TX_INV_pin, TX_INV_on);
+  else
+    digitalWrite(TX_INV_pin, TX_INV_off);
+#endif
+
+#ifdef RX_INV_pin
+  pinMode(RX_INV_pin, OUTPUT);
+  if ((bind_data.flags & TELEMETRY_MASK) == TELEMETRY_FRSKY) {
+    digitalWrite(RX_INV_pin, RX_INV_on);
+   else
+   digitalWrite(RX_INV_pin, RX_INV_off);
+#endif
 
   if ((rx_config.pinMapping[TXD_OUTPUT] == PINMAP_SPKTRM) ||
       (rx_config.pinMapping[TXD_OUTPUT] == PINMAP_SUMD)) {
