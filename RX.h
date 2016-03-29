@@ -261,7 +261,13 @@ void setupOutputs()
     case PINMAP_ANALOG:
       pinMode(OUTPUT_PIN[i], INPUT);
       break;
+    case PINMAP_SUMD:
+    case PINMAP_SBUS:
+    case PINMAP_SPKTRM:
     case PINMAP_TXD:
+#ifdef PIN_MULTIPLEX_TXD
+      pinMode(PIN_MULTIPLEX_TXD, INPUT);
+#endif
     case PINMAP_RXD:
     case PINMAP_SDA:
     case PINMAP_SCL:
@@ -272,6 +278,9 @@ void setupOutputs()
       }
       if (i == TXD_OUTPUT) {
         UCSR0B &= 0xF7; //disable serial TXD
+#ifdef PIN_MULTIPLEX_TXD
+        pinMode(1, INPUT); // make sure TX pin is high impedance
+#endif
       }
       pinMode(OUTPUT_PIN[i], OUTPUT); //PPM,PWM,RSSI,LBEEP
       break;
@@ -630,10 +639,12 @@ void setup()
   } else {
     setupOutputs();
 
+    #if defined(SDA_OUTPUT) & defined(SCL_OUTPUT)
     if ((rx_config.pinMapping[SDA_OUTPUT] != PINMAP_SDA) ||
         (rx_config.pinMapping[SCL_OUTPUT] != PINMAP_SCL)) {
       rx_config.flags &= ~SLAVE_MODE;
     }
+    #endif
 
     if ((rx_config.flags & ALWAYS_BIND) && (!(rx_config.flags & SLAVE_MODE))) {
       if (bindReceive(500)) {
@@ -645,6 +656,7 @@ void setup()
     }
   }
 
+  #if defined(SDA_OUTPUT) & defined(SCL_OUTPUT)
   if ((rx_config.pinMapping[SDA_OUTPUT] == PINMAP_SDA) &&
       (rx_config.pinMapping[SCL_OUTPUT] == PINMAP_SCL)) {
     myI2C_init(1);
@@ -660,6 +672,7 @@ void setup()
       }
     }
   }
+  #endif
 
   Serial.print("Entering normal mode");
 
@@ -900,25 +913,28 @@ retry:
           // tx_buf[0] lowest 6 bits left at 0
           tx_buf[1] = lastRSSIvalue;
 
+#ifdef ANALOG0_OUTPUT
           if (rx_config.pinMapping[ANALOG0_OUTPUT] == PINMAP_ANALOG) {
             tx_buf[2] = analogRead(OUTPUT_PIN[ANALOG0_OUTPUT]) >> 2;
 #ifdef ANALOG0_OUTPUT_ALT
           } else if (rx_config.pinMapping[ANALOG0_OUTPUT_ALT] == PINMAP_ANALOG) {
             tx_buf[2] = analogRead(OUTPUT_PIN[ANALOG0_OUTPUT_ALT]) >> 2;
 #endif
-          } else {
+          } else
+#endif
             tx_buf[2] = 0;
-          }
 
+#ifdef ANALOG1_OUTPUT
           if (rx_config.pinMapping[ANALOG1_OUTPUT] == PINMAP_ANALOG) {
             tx_buf[3] = analogRead(OUTPUT_PIN[ANALOG1_OUTPUT]) >> 2;
 #ifdef ANALOG1_OUTPUT_ALT
           } else if (rx_config.pinMapping[ANALOG1_OUTPUT_ALT] == PINMAP_ANALOG) {
             tx_buf[3] = analogRead(OUTPUT_PIN[ANALOG1_OUTPUT_ALT]) >> 2;
 #endif
-          } else {
+          } else
+#endif
             tx_buf[3] = 0;
-          }
+
           tx_buf[4] = (lastAFCCvalue >> 8);
           tx_buf[5] = lastAFCCvalue & 0xff;
           tx_buf[6] = countSetBits(linkQuality & 0x7fff);

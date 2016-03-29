@@ -32,6 +32,7 @@ typedef struct pinMask {
 #define RX_MICRO      0x06
 #define RX_FLYTRONM3  0x07
 #define RX_BRORX      0x08
+#define RX_DTFCOOKIE  0x09
 
 #define PINMAP_PPM    0x20
 #define PINMAP_RSSI   0x21
@@ -651,7 +652,7 @@ void setupRfmInterrupt()
   attachInterrupt(IRQ_interrupt, RFM22B_Int, FALLING);
 }
 
-#define SWAP_GPIOS
+// #define SWAP_GPIOS
 
 #endif
 
@@ -1424,3 +1425,110 @@ void setupRfmInterrupt()
 }
 
 #endif
+
+#if (BOARD_TYPE == 10) // DTF Cookie
+#if (__AVR_ATmega328P__ != 1) || (F_CPU != 16000000)
+#warning Possibly wrong board selected, select Arduino Pro/Pro Mini 5V/16MHz w/ ATMega328
+#endif
+
+#if (COMPILE_TX == 1)
+// No TX target at this time.
+#error This target does not have TX support at this time.
+
+#else
+// RX operation
+#define PPM_OUT 9 // OCP1A
+#define RSSI_OUT 3 // PD3 OC2B
+
+#define PWM_1 9 // PB1 - also PPM
+
+#define OUTPUTS 3 // IOs available
+
+const pinMask_t OUTPUT_MASKS[OUTPUTS] = {
+  {0x02,0x00,0x02}, {0x00,0x00,0x01}, {0x04,0x00,0x00}, // CH1/PPM+TX, CH2/RX, CH3/LBEEP
+};
+
+#define PPM_OUTPUT 0
+#define RSSI_OUTPUT 2
+#define LLIND_OUTPUT 2
+#define RXD_OUTPUT 1
+#define TXD_OUTPUT 0
+
+const uint8_t OUTPUT_PIN[OUTPUTS] = { 9, 0, 3};
+
+#define PIN_MULTIPLEX_TXD 9
+
+struct rxSpecialPinMap rxSpecialPins[] = {
+  { 0, PINMAP_PPM},
+  { 0, PINMAP_TXD},
+  { 0, PINMAP_SPKTRM},
+  { 0, PINMAP_SBUS},
+  { 0, PINMAP_SUMD},
+  { 1, PINMAP_RXD},
+  { 2, PINMAP_LBEEP},
+  { 2, PINMAP_LLIND},
+};
+
+void rxInitHWConfig()
+{
+  rx_config.rx_type = RX_DTFCOOKIE;
+  rx_config.pinMapping[0] = PINMAP_PPM;
+  rx_config.pinMapping[1] = PINMAP_RXD;
+  rx_config.pinMapping[2] = PINMAP_LBEEP;
+}
+#endif // RX operation
+
+#define Red_LED 6
+#define Green_LED 5
+
+#define Red_LED_ON    PORTD |=  _BV(6);
+#define Red_LED_OFF   PORTD &= ~_BV(6);
+#define Green_LED_ON  PORTD |=  _BV(5);
+#define Green_LED_OFF PORTD &= ~_BV(5);
+
+#define  nIRQ_1 (PIND & 0x04)==0x04 //D2
+#define  nIRQ_0 (PIND & 0x04)==0x00 //D2
+
+#define  nSEL_on PORTD |= (1<<4) //D4
+#define  nSEL_off PORTD &= 0xEF //D4
+
+#define  SCK_on  PORTB |= _BV(5)  //B5
+#define  SCK_off PORTB &= ~_BV(5) //B5
+
+#define  SDI_on  PORTB |= _BV(3)  //B3
+#define  SDI_off PORTB &= ~_BV(3) //B3
+
+#define  SDO_1 (PINB & _BV(4)) == _BV(4) //B4
+#define  SDO_0 (PINB & _BV(4)) == 0x00  //B4
+
+#define SDO_pin 12
+#define SDI_pin 11
+#define SCLK_pin 13
+#define IRQ_pin 2
+#define nSel_pin 4
+#define SDN_pin 15
+#define RX_INV_pin 16
+#define TX_INV_pin 17
+
+#define RX_INV_off 0
+#define RX_INV_on 1
+#define TX_INV_off 0
+#define TX_INV_on 1
+
+void setupSPI()
+{
+  pinMode(SDO_pin, INPUT);   //SDO
+  pinMode(SDI_pin, OUTPUT);   //SDI
+  pinMode(SCLK_pin, OUTPUT);   //SCLK
+  pinMode(IRQ_pin, INPUT);   //IRQ
+  pinMode(nSel_pin, OUTPUT);   //nSEL
+}
+
+#define IRQ_interrupt 0
+void setupRfmInterrupt()
+{
+  attachInterrupt(IRQ_interrupt, RFM22B_Int, FALLING);
+}
+
+#endif // DTF UHF Cookie board type 10
+
