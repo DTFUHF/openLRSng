@@ -706,9 +706,9 @@ void setup()
 
 #ifdef RX_INV_pin
   pinMode(RX_INV_pin, OUTPUT);
-  if ((bind_data.flags & TELEMETRY_MASK) == TELEMETRY_FRSKY) {
+  if ((bind_data.flags & TELEMETRY_MASK) == TELEMETRY_FRSKY)
     digitalWrite(RX_INV_pin, RX_INV_on);
-   else
+  else
    digitalWrite(RX_INV_pin, RX_INV_off);
 #endif
 
