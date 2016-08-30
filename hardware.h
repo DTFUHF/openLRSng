@@ -1441,20 +1441,28 @@ void setupRfmInterrupt()
 #define RSSI_OUT 3 // PD3 OC2B
 
 #define PWM_1 9 // PB1 - also PPM
+#define PWM_2 A0 // PC0, ADC0
+#define PWM_3 8 // PB0
+#define PWM_4 10 // PB2
 
-#define OUTPUTS 3 // IOs available
+#define OUTPUTS 6 // IOs available
 
 const pinMask_t OUTPUT_MASKS[OUTPUTS] = {
-  {0x02,0x00,0x02}, {0x00,0x00,0x01}, {0x04,0x00,0x00}, // CH1/PPM+TX, CH2/RX, CH3/LBEEP
+  {0x02,0x00,0x02}, // CH1/PPM+TX
+  {0x00,0x01,0x00}, // CH2
+  {0x01,0x00,0x00}, // CH3
+  {0x04,0x00,0x02}, // CH4
+  {0x00,0x00,0x01}, // CH5/RX
+  {0x04,0x00,0x00}, // CH6/LBEEP
 };
 
 #define PPM_OUTPUT 0
-#define RSSI_OUTPUT 2
-#define LLIND_OUTPUT 2
-#define RXD_OUTPUT 1
+#define RSSI_OUTPUT 5
+#define LLIND_OUTPUT 5
+#define RXD_OUTPUT 4
 #define TXD_OUTPUT 0
 
-const uint8_t OUTPUT_PIN[OUTPUTS] = { 9, 0, 3};
+const uint8_t OUTPUT_PIN[OUTPUTS] = { 9, A0, 8, 10, 0, 3};
 
 #define PIN_MULTIPLEX_TXD 9
 
@@ -1464,17 +1472,20 @@ struct rxSpecialPinMap rxSpecialPins[] = {
   { 0, PINMAP_SPKTRM},
   { 0, PINMAP_SBUS},
   { 0, PINMAP_SUMD},
-  { 1, PINMAP_RXD},
-  { 2, PINMAP_LBEEP},
-  { 2, PINMAP_LLIND},
+  { 4, PINMAP_RXD},
+  { 5, PINMAP_LBEEP},
+  { 5, PINMAP_LLIND},
 };
 
 void rxInitHWConfig()
 {
   rx_config.rx_type = RX_DTFCOOKIE;
   rx_config.pinMapping[0] = PINMAP_PPM;
-  rx_config.pinMapping[1] = PINMAP_RXD;
-  rx_config.pinMapping[2] = PINMAP_LBEEP;
+  rx_config.pinMapping[1] = 1;
+  rx_config.pinMapping[2] = 2;
+  rx_config.pinMapping[3] = 3;
+  rx_config.pinMapping[4] = PINMAP_RXD;
+  rx_config.pinMapping[5] = PINMAP_LBEEP;
 }
 #endif // RX operation
 
